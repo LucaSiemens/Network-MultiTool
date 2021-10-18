@@ -4,10 +4,12 @@ MAINTAINER Kamran Azeem & Henrik Høegh (kaz@praqma.net, heh@praqma.net)
 
 EXPOSE 80 443 1180 11443
 
+COPY ./app /app
+
 # Install some tools in the container and generate self-signed SSL certificates.
 # Packages are listed in alphabetical order, for ease of readability and ease of maintenance.
 RUN     apk update \
-    &&  apk add bash bind-tools busybox-extras curl \
+    &&  apk add alpine-sdk bash bind-tools busybox-extras curl \
                 iproute2 iputils jq mtr \
                 net-tools nginx openssl \
                 perl-net-telnet procps tcpdump tcptraceroute wget \
@@ -15,7 +17,9 @@ RUN     apk update \
     &&  chmod 700 /certs \
     &&  openssl req \
         -x509 -newkey rsa:2048 -nodes -days 3650 \
-        -keyout /certs/server.key -out /certs/server.crt -subj '/CN=localhost'
+        -keyout /certs/server.key -out /certs/server.crt -subj '/CN=localhost' \
+    && gcc app/tsn_test_app.c -o app/tsn_test_app -lpthread \
+    && mkdir /app/out
 
 
 # Copy a simple index.html to eliminate text (index.html) noise which comes with default nginx image.
