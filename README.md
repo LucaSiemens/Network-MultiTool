@@ -1,161 +1,52 @@
 # Network-Multitool
-A (**multi-arch**) multitool for container/network testing and troubleshooting. The main docker image is based on Alpine Linux. There is a Fedora variant to be used in environments which require the image to be based only on RedHat Linux, or any of it's derivatives.
+A multitool for container/network testing and troubleshooting, forked from https://github.com/Praqma/Network-MultiTool.
 
 The container image contains lots of tools, as well as a `nginx` web server, which listens on port `80` and `443` by default. The web server helps to run this container-image in a straight-forward way, so you can simply `exec` into the container and use various tools.
 
-## Supported platforms: 
-* linux/386
-* linux/amd64
-* linux/arm/v7
-* linux/arm64
-
-## Downloadable from Docker Hub: 
-* [https://hub.docker.com/r/praqma/network-multitool/](https://hub.docker.com/r/praqma/network-multitool/)  (Automated multi-arch Build)
-
-## Variants / image tags:
-* **latest**, minimal, alpine-minimal ( The main/default **'minimal'** image - Alpine based )
-* extra, alpine-extra (Alpine based image - with **extra tools** )
-* fedora, fedora-minimal ( **'Minimal'** Fedora based image )
-
-
-### Tools included in "latest, minimal, alpine-minimal":
-* apk package manager
+## Tools included
 * Nginx Web Server (port 80, port 443) - customizable ports!
 * wget, curl
 * dig, nslookup
-* ip, ifconfig, route, traceroute, tracepath, mtr
-* ping, arp, arping
+* ip, ifconfig, route, tcptraceroute, mtr
+* arp
 * ps, netstat
-* gzip, cpio, tar
-* telnet client
-* tcpdump
-* awk, cut, diff, find, grep, sed, vi editor, wc
+* iperf
+* tcpdump, tshark
 * jq
-* `/bin/sh` shell interpreter - not `/bin/bash`
-
-**Size:** 16 MB compressed, 38 MB uncompressed
-
-### Tools included in "extra, alpine-extra":
-* apk package manager
-* Nginx Web Server (port 80, port 443) - customizable ports!
-* wget, curl, iperf3
-* dig, nslookup
-* ip, ifconfig, ethtool, mii-tool, route
-* ping, nmap, arp, arping
-* awk, sed, grep, cut, diff, wc, find, vi editor
-* ps, netstat, ss
-* gzip, cpio, tar
-* tcpdump, wireshark, tshark
-* telnet client, ssh client, ftp client, rsync, scp
-* traceroute, tracepath, mtr
-* netcat (nc), socat
-* ApacheBench (ab)
-* mysql & postgresql client
-* jq
-* git
-* `/bin/bash` shell interpreter
-
-**Size:** 64 MB compressed, 220 MB uncompressed
-
-
-### Tools included in "fedora, fedora-minimal":
-* YUM package manager
-* Nginx Web Server (port 80, port 443) - customizable ports!
-* wget, curl
-* dig, nslookup
-* ip, ifconfig, route, traceroute, tracepath, mtr
-* ping, arp, arping
-* ps, netstat
-* gzip, cpio, tar
-* telnet client
-* awk, cut, diff, find, grep, sed, vi editor, wc
-* jq
-* `/bin/sh` shell interpreter - not `/bin/bash`
-
-
-**Size:** 72 MB uncompressed
-
-
-
-
+* mgen
+* tsn test app
 
 **Note:** The SSL certificates are generated for 'localhost', are self signed, and placed in `/certs/` directory. During your testing, ignore the certificate warning/error. While using curl, you can use `-k` to ignore SSL certificate warnings/errors.
 
 
 # How to use this image? 
-## How to use this image in normal **container/pod network** ?
 
-### Docker:
+## Build as regular docker container
+1. Clone this repo
+2. Move to the directory: ```cd Network-MultiTool```
+3. Clone the tsn app repo
+4. Create a tsn log output directory somewhere on your local machine (referred to as <tsn_logs> in the following)
+5. Build the image:
 ```
-$ docker run  -d praqma/network-multitool
+$ docker build -t network-tools .
 ```
-
-### Kubernetes:
-
-Create single pod - without a deployment:
+7. Run the image:
 ```
-$ kubectl run multitool --image=praqma/network-multitool
+$ docker run --cpus=2 --memory=256m -d --name=network-multitool --net=host --privileged -v <tsn_logs>:/app/out -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -t network-tools
 ```
-
-Create a deployment:
+8. Verify it's working:
 ```
-$ kubectl create deployment multitool --image=praqma/network-multitool
+$ curl http://localhost:1180
+-e Praqma Network MultiTool (with NGINX) - ubuntu - *.*.*.*
+$ curl -k https://localhost:11443
+-e Praqma Network MultiTool (with NGINX) - ubuntu - *.*.*.*
 ```
-
-**Note:** You can pass additional parameter `--namespace=<your-desired-namespace>` to the above kubectl commands.
-
-## How to use this image on **host network** ?
-
-Sometimes you want to do testing using the **host network**.  This can be achieved by running the multitool using host networking. 
-
-
-### Docker:
+9. Enter the container with an interactive shell:
 ```
-$ docker run --network host -d praqma/network-multitool
+$ docker exec -it <container_id> bash
 ```
 
-**Note:** If port 80 and/or 443 are already busy on the host, then use pass the extra arguments to multitool, so it can listen on a different port, as shown below:
-
-```
-$ docker run --network host -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -d praqma/network-multitool
-```
-
-### kubernetes:
-For Kubernetes, there is YAML/manifest file `multitool-daemonset.yaml` in the `kubernetes` directory, that will run an instance of the multitool on all hosts in the cluster using host networking.
-
-```
-kubectl apply -f kubernetes/multitool-daemonset.yaml
-```
-
-**Notes:** 
-* You can pass additional parameter `--namespace=<your-desired-namespace>` to the above kubectl command.
-* Due to a possibility of something (some service) already listening on port 80 and 443 on the worker nodes, the `daemonset` is configured to run multitool on port `1180` and `11443`. You can change this in the YAML file if you want.
-
-
-# Configurable HTTP and HTTPS ports:
-There are times when one may want to join this (multitool) container to another container's IP namespace for troubleshooting, or on the host network. This is true for both Docker and Kubernetes platforms. During that time if the container in question is a web server (nginx, apache, etc), or a reverse-proxy (traefik, nginx, haproxy, etc), then network-multitool cannot join it in the same IP namespace on Docker, and similarly it cannot join the same pod on Kubernetes. This happens because network multitool also runs a web server on port 80 (and 443), and this results in port conflict on the same IP address. To help in this sort of troubleshooting, there are two environment variables **HTTP_PORT** and **HTTPS_PORT** , which you can use to provide the values of your choice instead of 80 and 443. When the container starts, it uses the values provided by you/user to listen for incoming connections. Below is an example:
-
-```
-[kamran@kworkhorse network-multitool]$ docker run -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -p 1180:1180 -p 11443:11443 -d local/network-multitool
-4636efd4660c2436b3089ab1a979e5ce3ae23055f9ca5dc9ffbab508f28dfa2a
-
-[kamran@kworkhorse network-multitool]$ docker ps
-CONTAINER ID        IMAGE                     COMMAND                  CREATED             STATUS              PORTS                                                             NAMES
-4636efd4660c        local/network-multitool   "/docker-entrypoint.…"   4 seconds ago       Up 3 seconds        80/tcp, 0.0.0.0:1180->1180/tcp, 443/tcp, 0.0.0.0:11443->11443/tcp   recursing_nobel
-6e8b6ed8bfa6        nginx                     "nginx -g 'daemon of…"   56 minutes ago      Up 56 minutes       80/tcp                                                            nginx
-
-[kamran@kworkhorse network-multitool]$ curl http://localhost:1180
-Praqma Network MultiTool (with NGINX) - 4636efd4660c - 172.17.0.3/16
-
-[kamran@kworkhorse network-multitool]$ curl -k https://localhost:11443
-Praqma Network MultiTool (with NGINX) - 4636efd4660c - 172.17.0.3/16
-[kamran@kworkhorse network-multitool]$ 
-```  
-
-If these environment variables are absent/not-provided, the container will listen on normal/default ports 80 and 443.
-
-
-# FAQs
+# FAQs (unedited from original project)
 ## Why this multitool runs a web-server?
 Well, normally, if a container does not run a daemon/service, then running it (the container) involves using *creative ways / hacks* to keep it alive. If you don't want to suddenly start browsing the internet for "those creative ways", then it is best to run a small web server in the container - as the default process. 
 
@@ -200,8 +91,3 @@ One could argue that it is possible to simply install the tools on the hosts and
 * By using a `daemonset`, it makes it easier to integrate with other resources. e.g. Use volumes for packet capture files, etc.
 * Using the `daemonset` provides a *'cloud native'* approach to provision debugging/testing tools.
 * You can `exec` into the `daemonset`, without needing to SSH into the node.
-
-
-## How to contribute to this project?
-Contributions are welcome for packages/tools considered **"absolutely necessary"**, of **"core"** nature, are **"minimal"** in size, and **"have large number of use-cases"**. Remember, the goal is not to create yet another Linux distribution! :)
-
