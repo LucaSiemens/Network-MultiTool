@@ -7,7 +7,7 @@ COPY ./app /app
 # Install some tools in the container and generate self-signed SSL certificates.
 # Packages are listed in alphabetical order, for ease of readability and ease of maintenance.
 RUN     apt-get update \
-    &&  apt-get install curl dnsutils \
+    &&  apt-get install apt-utils build-essential curl dnsutils \
                 iperf iproute2 jq mtr \
                 net-tools nginx openssl \
                 procps tcpdump tcptraceroute tshark wget -y \
