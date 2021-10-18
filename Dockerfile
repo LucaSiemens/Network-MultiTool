@@ -1,5 +1,7 @@
 FROM ubuntu:20.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 EXPOSE 80 443 1180 11443
 
 COPY ./app /app
