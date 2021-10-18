@@ -37,6 +37,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 
+RUN useradd -s /bin/false nginx
 
 # Start nginx in foreground:
 CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
