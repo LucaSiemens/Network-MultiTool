@@ -7,10 +7,10 @@ COPY ./app /app
 # Install some tools in the container and generate self-signed SSL certificates.
 # Packages are listed in alphabetical order, for ease of readability and ease of maintenance.
 RUN     apt-get update \
-    &&  apt-get install bash bind-tools busybox-extras curl \
-                iproute2 iputils jq mtr \
+    &&  apt-get install curl dnsutils \
+                iperf iproute2 jq mtr \
                 net-tools nginx openssl \
-                perl-net-telnet procps tcpdump tcptraceroute wget -y \
+                procps tcpdump tcptraceroute tshark wget -y \
     &&  mkdir /certs \
     &&  chmod 700 /certs \
     &&  openssl req \
