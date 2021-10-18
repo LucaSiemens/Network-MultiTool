@@ -10,7 +10,7 @@ COPY ./app /app
 # Packages are listed in alphabetical order, for ease of readability and ease of maintenance.
 RUN     apt-get update \
     &&  apt-get install apt-utils build-essential curl dnsutils \
-                iperf iproute2 jq mtr \
+                iperf iproute2 jq mgen mtr \
                 net-tools nginx openssl \
                 procps tcpdump tcptraceroute tshark wget -y \
     &&  mkdir /certs \
