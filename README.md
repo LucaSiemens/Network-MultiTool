@@ -25,14 +25,15 @@ The container image contains lots of tools, as well as a `nginx` web server, whi
 1. Clone this repo
 2. Move to the directory: ```cd Network-MultiTool```
 3. Clone the tsn app repo
-4. Create a tsn log output directory somewhere on your local machine (referred to as <tsn_logs> in the following)
-5. Build the image:
+4. Optional: Create a tsn log output directory somewhere on your local machine (referred to as <tsn_logs> in the following)
+5. Optional: Create a directory somewhere on your local machine that will be used as another shared directory (referred to as <shared_dir> in the following)
+6. Build the image:
 ```
 $ docker build -t network-tools .
 ```
 7. Run the image:
 ```
-$ docker run --cpus=2 --memory=256m -d --name=network-multitool --net=host --privileged -v <tsn_logs>:/app/out -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -t network-tools
+$ docker run --cpus=2 --memory=256m -d --name=network-multitool --net=host --privileged -v <tsn_logs>:/app/out -v <shared_dir>:/shared_dir -e HTTP_PORT=1180 -e HTTPS_PORT=11443 -t network-tools
 ```
 8. Verify it's working:
 ```
