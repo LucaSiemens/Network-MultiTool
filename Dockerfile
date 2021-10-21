@@ -19,7 +19,8 @@ RUN     apt-get update \
         -x509 -newkey rsa:2048 -nodes -days 3650 \
         -keyout /certs/server.key -out /certs/server.crt -subj '/CN=localhost' \
     && gcc app/tsn_test_app.c -o app/tsn_test_app -lpthread \
-    && mkdir /app/out
+    && mkdir /app/out \
+    && mkdir /shared_dir
 
 
 # Copy a simple index.html to eliminate text (index.html) noise which comes with default nginx image.
