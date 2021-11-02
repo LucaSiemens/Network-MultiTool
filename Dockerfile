@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 EXPOSE 80 443 1180 11443
 
-COPY ./app /app
+COPY ./es_to_es /app
 
 # Install some tools in the container and generate self-signed SSL certificates.
 # Packages are listed in alphabetical order, for ease of readability and ease of maintenance.
