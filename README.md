@@ -39,12 +39,25 @@ $ docker run --cpus=2 --memory=256m -d --name=network-multitool --net=host --pri
 ```
 $ curl http://localhost:1180
 -e Praqma Network MultiTool (with NGINX) - ubuntu - *.*.*.*
+```
+```
 $ curl -k https://localhost:11443
 -e Praqma Network MultiTool (with NGINX) - ubuntu - *.*.*.*
 ```
 9. Enter the container with an interactive shell:
 ```
 $ docker exec -it <container_id> bash
+```
+## Restarting the container after it is stopped
+You will need a little workaround for now to start the container after it was stopped:
+1. Copy the nginx config file from inside the container:
+```
+$ docker cp network_multitool:/etc/nginx/nginx.conf ./nginx.conf
+```
+2. Edit the file: In the file edit the line with http and https port (both will have sth like 11180 111443) to 80 and 443
+3. Copy the file back into the container:
+```
+$ docker cp  ./nginx.conf network_multitool:/etc/nginx/nginx.conf
 ```
 
 # FAQs (unedited from original project)
